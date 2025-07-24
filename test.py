@@ -1,99 +1,180 @@
-from panda3d.core import *
-from direct.showbase.ShowBase import ShowBase
-from direct.task import Task
-from direct.actor.Actor import Actor
-from panda3d.core import KeyboardButton
+"""
+Use Pymunk physics engine.
 
-class PongGame(ShowBase):
+For more info on Pymunk see:
+https://www.pymunk.org/en/latest/
+
+To install pymunk:
+pip install pymunk
+
+Artwork from https://kenney.nl
+
+If Python and Arcade are installed, this example can be run from the command line with:
+python -m arcade.examples.pymunk_pegboard
+
+Click and drag with the mouse to move the boxes.
+"""
+
+import arcade
+import pymunk
+import random
+import timeit
+import math
+
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 800
+WINDOW_TITLE = "Pymunk Pegboard Example"
+
+
+class CircleSprite(arcade.Sprite):
+    def __init__(self, filename, pymunk_shape):
+        super().__init__(
+            filename,
+            center_x=pymunk_shape.body.position.x,
+            center_y=pymunk_shape.body.position.y,
+        )
+        self.width = pymunk_shape.radius * 2
+        self.height = pymunk_shape.radius * 2
+        self.pymunk_shape = pymunk_shape
+
+
+class GameView(arcade.View):
+    """ Main application class. """
+
     def __init__(self):
         super().__init__()
 
-        self.disableMouse()
+        self.peg_list = arcade.SpriteList()
+        self.ball_list: arcade.SpriteList[CircleSprite] = arcade.SpriteList()
+        self.background_color = arcade.color.DARK_SLATE_GRAY
 
-        # Set up the camera
-        self.camera.setPos(0, -20, 0)
-        self.camera.lookAt(0, 0, 0)
+        self.draw_time = 0
+        self.processing_time = 0
 
-        # Create left paddle
-        self.left_paddle = self.loader.loadModel("models/box")
-        self.left_paddle.setScale(0.2, 0.2, 1.5)
-        self.left_paddle.setPos(-6, 0, 0)
-        self.left_paddle.reparentTo(self.render)
+        # -- Pymunk
+        self.space = pymunk.Space()
+        self.space.gravity = (0.0, -900.0)
 
-        # Create right paddle
-        self.right_paddle = self.loader.loadModel("models/box")
-        self.right_paddle.setScale(0.2, 0.2, 1.5)
-        self.right_paddle.setPos(6, 0, 0)
-        self.right_paddle.reparentTo(self.render)
+        self.static_lines = []
 
-        # Create ball
-        self.ball = self.loader.loadModel("models/smiley")
-        self.ball.setScale(0.4)
-        self.ball.setPos(0, 0, 0)
-        self.ball.reparentTo(self.render)
+        self.ticks_to_next_ball = 10
 
-        self.ball_velocity = [0.1, 0.1]
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, (0, 10), (WINDOW_WIDTH, 10), 0.0)
+        shape.friction = 10
+        self.space.add(shape, body)
+        self.static_lines.append(shape)
 
-        # Movement states
-        self.keys = {"w": False, "s": False, "arrow_up": False, "arrow_down": False}
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, (WINDOW_WIDTH - 50, 10), (WINDOW_WIDTH, 30), 0.0)
+        shape.friction = 10
+        self.space.add(shape, body)
+        self.static_lines.append(shape)
 
-        self.accept("w", self.set_key, ["w", True])
-        self.accept("w-up", self.set_key, ["w", False])
-        self.accept("s", self.set_key, ["s", True])
-        self.accept("s-up", self.set_key, ["s", False])
-        self.accept("arrow_up", self.set_key, ["arrow_up", True])
-        self.accept("arrow_up-up", self.set_key, ["arrow_up", False])
-        self.accept("arrow_down", self.set_key, ["arrow_down", True])
-        self.accept("arrow_down-up", self.set_key, ["arrow_down", False])
+        body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        shape = pymunk.Segment(body, (50, 10), (0, 30), 0.0)
+        shape.friction = 10
+        self.space.add(shape, body)
+        self.static_lines.append(shape)
 
-        # Add update task
-        self.taskMgr.add(self.update, "update")
+        radius = 20
+        separation = 150
+        for row in range(6):
+            for column in range(6):
+                x = column * separation + (separation // 2 * (row % 2))
+                y = row * separation + separation // 2
+                body = pymunk.Body(body_type=pymunk.Body.STATIC)
+                body.position = x, y
+                shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+                shape.friction = 0.3
+                self.space.add(body, shape)
 
-    def set_key(self, key, value):
-        self.keys[key] = value
+                sprite = CircleSprite(":resources:images/pinball/bumper.png", shape)
+                self.peg_list.append(sprite)
 
-    def update(self, task):
-        # Move paddles
-        if self.keys["w"]:
-            self.left_paddle.setZ(self.left_paddle.getZ() + 0.2)
-        if self.keys["s"]:
-            self.left_paddle.setZ(self.left_paddle.getZ() - 0.2)
-        if self.keys["arrow_up"]:
-            self.right_paddle.setZ(self.right_paddle.getZ() + 0.2)
-        if self.keys["arrow_down"]:
-            self.right_paddle.setZ(self.right_paddle.getZ() - 0.2)
+    def on_draw(self):
+        """
+        Render the screen.
+        """
 
-        # Move ball
-        pos = self.ball.getPos()
-        vx, vz = self.ball_velocity
-        new_x = pos.getX() + vx
-        new_z = pos.getZ() + vz
-        self.ball.setPos(new_x, 0, new_z)
+        # This command has to happen before we start drawing
+        self.clear()
 
-        # Bounce off top and bottom walls
-        if new_z > 4.5 or new_z < -4.5:
-            self.ball_velocity[1] *= -1
+        draw_start_time = timeit.default_timer()
+        self.peg_list.draw()
+        self.ball_list.draw()
 
-        # Bounce off paddles
-        if self.check_collision(self.ball, self.left_paddle) and vx < 0:
-            self.ball_velocity[0] *= -1
-        if self.check_collision(self.ball, self.right_paddle) and vx > 0:
-            self.ball_velocity[0] *= -1
+        for line in self.static_lines:
+            body = line.body
 
-        # Reset if ball goes off screen
-        if abs(new_x) > 8:
-            self.ball.setPos(0, 0, 0)
-            self.ball_velocity = [0.1, 0.1]
+            pv1 = body.position + line.a.rotated(body.angle)
+            pv2 = body.position + line.b.rotated(body.angle)
+            arcade.draw_line(pv1.x, pv1.y, pv2.x, pv2.y, arcade.color.WHITE, 2)
 
-        return Task.cont
+        # Display timings
+        output = f"Processing time: {self.processing_time:.3f}"
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 20, arcade.color.WHITE, 12)
 
-    def check_collision(self, ball, paddle):
-        ball_pos = ball.getPos()
-        paddle_pos = paddle.getPos()
-        return (
-            abs(ball_pos.getX() - paddle_pos.getX()) < 0.5 and
-            abs(ball_pos.getZ() - paddle_pos.getZ()) < 1.5
-        )
+        output = f"Drawing time: {self.draw_time:.3f}"
+        arcade.draw_text(output, 20, WINDOW_HEIGHT - 40, arcade.color.WHITE, 12)
 
-game = PongGame()
-game.run()
+        self.draw_time = timeit.default_timer() - draw_start_time
+
+    def on_update(self, delta_time):
+        self.ticks_to_next_ball -= 1
+        if self.ticks_to_next_ball <= 0:
+            self.ticks_to_next_ball = 20
+            mass = 0.5
+            radius = 15
+            inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
+            body = pymunk.Body(mass, inertia)
+            x = random.randint(0, WINDOW_WIDTH)
+            y = WINDOW_HEIGHT
+            body.position = x, y
+            shape = pymunk.Circle(body, radius, pymunk.Vec2d(0, 0))
+            shape.friction = 0.3
+            self.space.add(body, shape)
+
+            sprite = CircleSprite(":resources:images/items/gold_1.png", shape)
+            self.ball_list.append(sprite)
+
+        # Check for balls that fall off the screen
+        ball: CircleSprite
+        for ball in self.ball_list:
+            if ball.pymunk_shape.body.position.y < 0:
+                # Remove balls from physics space
+                self.space.remove(ball.pymunk_shape, ball.pymunk_shape.body)
+                # Remove balls from physics list
+                ball.remove_from_sprite_lists()
+
+        # Update physics
+        # Use a constant time step, don't use delta_time
+        # See "Game loop / moving time forward"
+        # https://www.pymunk.org/en/latest/overview.html#game-loop-moving-time-forward
+        self.space.step(1 / 60.0)
+
+        # Move sprites to where physics objects are
+        for ball in self.ball_list:
+            ball.center_x = ball.pymunk_shape.body.position.x
+            ball.center_y = ball.pymunk_shape.body.position.y
+            # Reverse angle because pymunk rotates ccw
+            ball.angle = math.degrees(-ball.pymunk_shape.body.angle)
+
+
+def main():
+    """ Main function """
+    # Create a window class. This is what actually shows up on screen
+    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+
+    # Create the GameView
+    game = GameView()
+
+    # Show GameView on screen
+    window.show_view(game)
+
+    # Start the arcade game loop
+    arcade.run()
+
+
+if __name__ == "__main__":
+    main()
