@@ -165,7 +165,7 @@ class Boss(arcade.TextureAnimationSprite):
             sleeping_frames.append(arcade.TextureKeyframe(texture, duration=500))
 
         angry_textures = []
-        for i in range(1, 2):
+        for i in range(1, 3):
             filename = f"images/boss/angry{i}.png"
             angry_textures.append(arcade.load_texture(filename))
 
@@ -187,7 +187,7 @@ class Boss(arcade.TextureAnimationSprite):
         self.angry_animation = arcade.TextureAnimation(angry_frames)
         self.normal_animation = arcade.TextureAnimation([arcade.TextureKeyframe(arcade.load_texture("images/boss/normal.png"), duration=500)])
         self.dead_animation = arcade.TextureAnimation([arcade.TextureKeyframe(arcade.load_texture("images/boss/dead.png"), duration=500)])
-        self.animation=self.injured_animation
+        self.animation=self.angry_animation
         self.scale = 20
 
 class PlatformerView(arcade.View):
