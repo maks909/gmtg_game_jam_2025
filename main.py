@@ -206,6 +206,8 @@ def main():
     window.set_size(screen[0], screen[1])
     window.set_fullscreen()
 
+    window.ctx.default_texture_filter = arcade.gl.NEAREST, arcade.gl.NEAREST
+
     # Show the view on screen
     window.show_view(StartGUIView())
 
