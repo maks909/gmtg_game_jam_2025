@@ -119,19 +119,59 @@ class PauseGUIView(arcade.View):
 class MathView(arcade.View):
     pass
 
+class Player(arcade.TextureAnimationSprite):
+    def __init__(self):
+        super().__init__(center_x=300, center_y=300)
+        run_left_textures = []
+        for i in range(1, 5):
+            filename = f"images/player/run_left{i}.png"
+            run_left_textures.append(arcade.load_texture(filename))
+        
+        run_right_textures = []
+        for i in range(1, 5):
+            filename = f"images/player/run_right{i}.png"
+            run_right_textures.append(arcade.load_texture(filename))
+
+        run_left_frames = []
+        for texture in run_left_textures:
+            run_left_frames.append(arcade.TextureKeyframe(texture, duration=80))
+        
+        run_right_frames = []
+        for texture in run_right_textures:
+            run_right_frames.append(arcade.TextureKeyframe(texture, duration=80))        
+
+        self.center_x=300
+        self.center_y=300
+        self.scale=1.0
+        
+        self.run_left_animation = arcade.TextureAnimation(run_left_frames)
+        self.run_right_animation = arcade.TextureAnimation(run_right_frames)
+        self.animation = self.run_left_animation
+
+    def draw(self, delta_time: float = 1/60):
+        self.center_x += 200
+        self.texture = self.animation.update(delta_time)
+
 class PlatformerView(arcade.View):
     def __init__(self):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
+        self.sprite_list = arcade.SpriteList()
+        self.player = Player()
+        self.sprite_list.append(self.player)
     
     def on_draw(self):
         self.clear()
+        self.sprite_list.draw()
     
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ESCAPE:
             self.window.show_view(PauseGUIView())
+    
+    def on_show_view(self) -> None:
+        pass
 
-class Player(arcade.TextureAnimationSprite):
-    pass
+    def on_hide_view(self) -> None:
+        pass
 
 def main():
     """ Main function """
