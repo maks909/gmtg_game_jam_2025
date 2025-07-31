@@ -163,7 +163,7 @@ class PlatformerView(arcade.View):
     
     def on_draw(self):
         self.clear()
-        self.sprite_list.draw()
+        self.sprite_list.draw(pixelated=True)
     
     def on_update(self, delta_time):
         # Update sprite positions
