@@ -152,6 +152,43 @@ class Player(arcade.TextureAnimationSprite):
 
         self.animation = self.stand_left_animation
 
+class Boss(arcade.TextureAnimationSprite):
+    def __init__(self):
+        super().__init__(center_x=arcade.get_display_size()[0]/2, center_y=300)
+        sleeping_textures = []
+        for i in range(1, 8):
+            filename = f"images/boss/sleeping{i}.png"
+            sleeping_textures.append(arcade.load_texture(filename))
+    
+        sleeping_frames = []
+        for texture in sleeping_textures:
+            sleeping_frames.append(arcade.TextureKeyframe(texture, duration=500))
+
+        angry_textures = []
+        for i in range(1, 2):
+            filename = f"images/boss/angry{i}.png"
+            angry_textures.append(arcade.load_texture(filename))
+
+        angry_frames = []
+        for texture in angry_textures:
+            angry_frames.append(arcade.TextureKeyframe(texture, duration=500))
+
+        injured_textures = []
+        for i in range(1, 3):
+            filename = f"images/boss/injured{i}.png"
+            injured_textures.append(arcade.load_texture(filename))
+
+        injured_frames = []
+        for texture in injured_textures:
+            injured_frames.append(arcade.TextureKeyframe(texture, duration=500))
+        
+        self.injured_animation = arcade.TextureAnimation(injured_frames)
+        self.sleeping_animation = arcade.TextureAnimation(sleeping_frames)
+        self.angry_animation = arcade.TextureAnimation(angry_frames)
+        self.normal_animation = arcade.TextureAnimation([arcade.TextureKeyframe(arcade.load_texture("images/boss/normal.png"), duration=500)])
+        self.dead_animation = arcade.TextureAnimation([arcade.TextureKeyframe(arcade.load_texture("images/boss/dead.png"), duration=500)])
+        self.animation=self.injured_animation
+        self.scale = 20
 
 class PlatformerView(arcade.View):
     def __init__(self):
@@ -160,7 +197,8 @@ class PlatformerView(arcade.View):
         self.player = Player()
         self.sprite_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(self.player)
-    
+        self.sprite_list.append(Boss())
+
     def on_draw(self):
         self.clear()
         self.sprite_list.draw(pixelated=True)
