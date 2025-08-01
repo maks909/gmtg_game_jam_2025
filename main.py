@@ -12,9 +12,9 @@ import os
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
-TEX_RED_BUTTON_NORMAL = arcade.load_texture(":resources:gui_basic_assets/button/red_normal.png")
-TEX_RED_BUTTON_HOVER = arcade.load_texture(":resources:gui_basic_assets/button/red_hover.png")
-TEX_RED_BUTTON_PRESS = arcade.load_texture(":resources:gui_basic_assets/button/red_press.png")
+TEX_RED_BUTTON_NORMAL = arcade.load_texture("images/button/normal.png")
+TEX_RED_BUTTON_HOVER = arcade.load_texture("images/button/hovered.png")
+TEX_RED_BUTTON_PRESS = arcade.load_texture("images/button/pressed.png")
 
 class StartGUIView(arcade.View):
     def __init__(self):
@@ -30,6 +30,7 @@ class StartGUIView(arcade.View):
                 texture=TEX_RED_BUTTON_NORMAL,
                 texture_hovered=TEX_RED_BUTTON_HOVER,
                 texture_pressed=TEX_RED_BUTTON_PRESS,
+                scale=0.2
             )
         )
         # add a button to switch to the blue view
@@ -79,6 +80,7 @@ class PauseGUIView(arcade.View):
                 texture=TEX_RED_BUTTON_NORMAL,
                 texture_hovered=TEX_RED_BUTTON_HOVER,
                 texture_pressed=TEX_RED_BUTTON_PRESS,
+                scale=0.2
             )
         )
         exit_button = box.add(
@@ -87,6 +89,7 @@ class PauseGUIView(arcade.View):
                 texture=TEX_RED_BUTTON_NORMAL,
                 texture_hovered=TEX_RED_BUTTON_HOVER,
                 texture_pressed=TEX_RED_BUTTON_PRESS,
+                scale=0.2
             )
         )
 
