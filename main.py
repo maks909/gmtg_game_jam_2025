@@ -219,8 +219,9 @@ class StartDialogueView(arcade.View):
 
         self.dialogue = ["Uhh, uhh... No one should bother me when I am sleeping!!",
             "Or you will face my full power!!!",
-            "I can create a time loop and you will stay here forever",
-            "Please, find the dragon and save us all!"]
+            "I can create a time loop and you will stay here forever...",
+            "... Unless you know math well...", 
+            "So have fun >:)"]
         self.current_line_index = 0
         
         self.dialogue_box = arcade.shape_list.create_rectangle_filled(
