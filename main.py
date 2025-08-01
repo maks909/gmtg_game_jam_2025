@@ -75,13 +75,8 @@ class StartGUIView(arcade.View):
 
         self.ui.draw()
 
-        # Add draw commands that should be on top of the UI (uncommon)
-        # ...
-
-
-
 class PauseGUIView(arcade.View):
-    def __init__(self):
+    def __init__(self, backview):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
 
         self.ui = UIManager()
@@ -118,7 +113,7 @@ class PauseGUIView(arcade.View):
         # add a button to resume
         @resume_button.event("on_click")
         def on_click(event):
-            self.window.show_view(PlatformerView())
+            self.window.show_view(backview)
 
         # add butoon to exit
         @exit_button.event("on_click")
@@ -145,76 +140,51 @@ class PauseGUIView(arcade.View):
 class MathView(arcade.View):
     pass
 
+def create_animation(path, image_name, frame_count, frame_duration, number = True):
+        textures = []
+        for i in range(1, frame_count+1):
+            if number:    
+                filename = f"{path}{image_name}{i}.png"
+            else:
+                filename = f"{path}{image_name}.png"
+            textures.append(arcade.load_texture(filename))
+        frames = []
+        for texture in textures:
+            frames.append(arcade.TextureKeyframe(texture, duration=frame_duration))
+        return arcade.TextureAnimation(frames)
 class Player(arcade.TextureAnimationSprite):
     def __init__(self):
         super().__init__(center_x=300, center_y=300)
-        run_left_textures = []
-        for i in range(1, 5):
-            filename = f"images/player/run_left{i}.png"
-            run_left_textures.append(arcade.load_texture(filename))
-        
-        run_right_textures = []
-        for i in range(1, 5):
-            filename = f"images/player/run_right{i}.png"
-            run_right_textures.append(arcade.load_texture(filename))
-
-        run_left_frames = []
-        for texture in run_left_textures:
-            run_left_frames.append(arcade.TextureKeyframe(texture, duration=80))
-        
-        run_right_frames = []
-        for texture in run_right_textures:
-            run_right_frames.append(arcade.TextureKeyframe(texture, duration=80))        
 
         self.center_x=300
         self.center_y=300
         self.scale=5
         
-        self.run_left_animation = arcade.TextureAnimation(run_left_frames)
-        self.run_right_animation = arcade.TextureAnimation(run_right_frames)
+        self.run_left_animation = create_animation("images/player/", "run_left", 4, 80)
+        self.run_right_animation = create_animation("images/player/", "run_right", 4, 80)
 
-        self.stand_left_animation = arcade.TextureAnimation([arcade.TextureKeyframe(run_left_textures[0])])
-        self.stand_right_animation = arcade.TextureAnimation([arcade.TextureKeyframe(run_right_textures[0])])
+        self.stand_left_animation = create_animation("images/player/", "run_left", 1, 80)
+        self.stand_right_animation = create_animation("images/player/", "run_right", 1, 80)
 
         self.animation = self.stand_left_animation
 
 class Boss(arcade.TextureAnimationSprite):
-    def __init__(self):
+    def __init__(self, behavior_type: str):
         super().__init__(center_x=arcade.get_display_size()[0]/2, center_y=300)
-        sleeping_textures = []
-        for i in range(1, 8):
-            filename = f"images/boss/sleeping{i}.png"
-            sleeping_textures.append(arcade.load_texture(filename))
-    
-        sleeping_frames = []
-        for texture in sleeping_textures:
-            sleeping_frames.append(arcade.TextureKeyframe(texture, duration=500))
-
-        angry_textures = []
-        for i in range(1, 3):
-            filename = f"images/boss/angry{i}.png"
-            angry_textures.append(arcade.load_texture(filename))
-
-        angry_frames = []
-        for texture in angry_textures:
-            angry_frames.append(arcade.TextureKeyframe(texture, duration=500))
-
-        injured_textures = []
-        for i in range(1, 3):
-            filename = f"images/boss/injured{i}.png"
-            injured_textures.append(arcade.load_texture(filename))
-
-        injured_frames = []
-        for texture in injured_textures:
-            injured_frames.append(arcade.TextureKeyframe(texture, duration=500))
         
-        self.injured_animation = arcade.TextureAnimation(injured_frames)
-        self.sleeping_animation = arcade.TextureAnimation(sleeping_frames)
-        self.angry_animation = arcade.TextureAnimation(angry_frames)
-        self.normal_animation = arcade.TextureAnimation([arcade.TextureKeyframe(arcade.load_texture("images/boss/normal.png"), duration=500)])
-        self.dead_animation = arcade.TextureAnimation([arcade.TextureKeyframe(arcade.load_texture("images/boss/dead.png"), duration=500)])
+        self.injured_animation = create_animation("images/boss/", "injured", 2, 500)
+        self.sleeping_animation = create_animation("images/boss/", "sleeping", 7, 500)
+        self.angry_animation = create_animation("images/boss/", "angry", 2, 500)
+        self.normal_animation = create_animation("images/boss/", "normal", 1, 500, False)
+        self.dead_animation = create_animation("images/boss/", "dead", 1, 500, False)
         self.animation=self.angry_animation
         self.scale = 20
+
+class StartCutSceneView(arcade.View):
+    def __init__(self):
+        super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
+        self.sprite_list = arcade.SpriteList()
+        self.sprite_list.append(Boss("howering"))
 
 class PlatformerView(arcade.View):
     def __init__(self):
@@ -223,7 +193,7 @@ class PlatformerView(arcade.View):
         self.player = Player()
         self.sprite_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(self.player)
-        self.sprite_list.append(Boss())
+        self.sprite_list.append(Boss("showing-right"))
 
     def on_draw(self):
         self.clear()
@@ -246,7 +216,7 @@ class PlatformerView(arcade.View):
             self.player.animation = self.player.run_right_animation
             self.player.change_x = 10
         elif key == arcade.key.ESCAPE:
-            self.window.show_view(PauseGUIView())
+            self.window.show_view(PauseGUIView(PlatformerView()))
     
     def on_key_release(self, key, modifiers):
         if key == arcade.key.LEFT:
