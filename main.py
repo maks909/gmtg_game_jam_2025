@@ -23,8 +23,16 @@ class StartGUIView(arcade.View):
         self.ui = UIManager()
 
         anchor = self.ui.add(UIAnchorLayout())
+        
+        box = anchor.add(
+            UIBoxLayout(
+                vertical=True,
+                space_between=20,  # space between buttons in pixels
+                align="center"
+            )
+        )
 
-        button = anchor.add(
+        play_button = box.add(
             UITextureButton(
                 text="Play",
                 texture=TEX_RED_BUTTON_NORMAL,
@@ -33,10 +41,24 @@ class StartGUIView(arcade.View):
                 scale=0.2
             )
         )
-        # add a button to switch to the blue view
-        @button.event("on_click")
+        exit_button = box.add(
+            UITextureButton(
+                text="Exit Game",
+                texture=TEX_RED_BUTTON_NORMAL,
+                texture_hovered=TEX_RED_BUTTON_HOVER,
+                texture_pressed=TEX_RED_BUTTON_PRESS,
+                scale=0.2
+            )
+        )
+        # add a button to start th game
+        @play_button.event("on_click")
         def on_click(event):
             self.window.show_view(PlatformerView())
+
+        # add a button to switch to exit the game
+        @exit_button.event("on_click")
+        def on_click(event):
+            arcade.exit()
 
     def on_show_view(self) -> None:
         self.ui.enable()
@@ -98,6 +120,7 @@ class PauseGUIView(arcade.View):
         def on_click(event):
             self.window.show_view(PlatformerView())
 
+        # add butoon to exit
         @exit_button.event("on_click")
         def on_click(event):
             arcade.exit()
@@ -246,8 +269,6 @@ def main():
     window = arcade.Window(title="The Learning Loop")
     window.set_size(screen[0], screen[1])
     window.set_fullscreen()
-
-    # window.ctx.default_texture_filter = arcade.gl.NEAREST, arcade.gl.NEAREST
 
     # Show the view on screen
     window.show_view(StartGUIView())
