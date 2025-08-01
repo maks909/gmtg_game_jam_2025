@@ -53,7 +53,7 @@ class StartGUIView(arcade.View):
         # add a button to start th game
         @play_button.event("on_click")
         def on_click(event):
-            self.window.show_view(StartDialogueView())
+            self.window.show_view(StartCutSceneView())
 
         # add a button to switch to exit the game
         @exit_button.event("on_click")
@@ -204,6 +204,36 @@ class Boss(arcade.TextureAnimationSprite):
             self.y_direction = -1
         self.center_y += self.y_direction*delta_time*30
 
+
+class StartCutSceneView(arcade.View):
+    def __init__(self):
+        super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
+        super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
+        self.sprite_list = arcade.SpriteList()
+        self.player = Player()
+        self.player.center_x = 20
+        self.player.animation = self.player.run_right_animation
+        self.sprite_list.append(self.player)
+        self.sprite_list.append(Boss("hovering"))
+
+    def on_draw(self):
+        """Draw the dialogue box and the current line of text."""
+        self.clear()
+        self.sprite_list.draw(pixelated=True)
+    
+    def on_update(self, delta_time):
+        self.sprite_list.update(delta_time)
+        self.sprite_list.update_animation(delta_time)
+        self.player.center_x += 3
+        self.player.scale = 6
+        if self.player.center_x >= 600: 
+            self.window.show_view(StartDialogueView())
+        elif self.player.center_x >= 400 and self.player.center_x <= 420:
+            self.sprite_list[1].animation = self.sprite_list[1].angry_animation
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.ESCAPE:
+            self.window.show_view(PauseGUIView(self))
 
 class StartDialogueView(arcade.View):
     def __init__(self):
