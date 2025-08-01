@@ -16,6 +16,13 @@ TEX_RED_BUTTON_NORMAL = arcade.load_texture("images/button/normal.png")
 TEX_RED_BUTTON_HOVER = arcade.load_texture("images/button/hovered.png")
 TEX_RED_BUTTON_PRESS = arcade.load_texture("images/button/pressed.png")
 
+try:
+    arcade.load_font("fonts/8bitoperator.ttf")  # Replace with your pixel font filename
+    PIXEL_FONT_NAME = "8bitoperator"
+except:
+    PIXEL_FONT_NAME = "Courier New"  # Fallback to monospace
+
+
 class StartGUIView(arcade.View):
     def __init__(self):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
@@ -277,6 +284,7 @@ class StartDialogueView(arcade.View):
             font_size=18,
             width=self.display_size[0] - 80,
             multiline=True, 
+            font_name=PIXEL_FONT_NAME
         )
 
     def on_update(self, delta_time):
