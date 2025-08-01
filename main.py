@@ -53,7 +53,7 @@ class StartGUIView(arcade.View):
         # add a button to start th game
         @play_button.event("on_click")
         def on_click(event):
-            self.window.show_view(StartCutSceneView())
+            self.window.show_view(StartDialogueView())
 
         # add a button to switch to exit the game
         @exit_button.event("on_click")
@@ -184,11 +184,17 @@ class Boss(arcade.TextureAnimationSprite):
             self.center_y = 800
             self.animation=self.sleeping_animation
             self.scale = 20
+        elif self.behavior_type == "angry":
+            self.center_x=arcade.get_display_size()[0]*0.75
+            self.y_direction = 1
+            self.center_y = 800
+            self.animation=self.angry_animation
+            self.scale = 20
 
     def update(self, delta_time: float):
         super().update() # The base Sprite.update doesn't need delta_time
 
-        if self.behavior_type == "hovering":
+        if self.behavior_type == "hovering" or self.behavior_type == "angry":
             self.hover(delta_time)
     
     def hover(self, delta_time: float):
@@ -199,17 +205,21 @@ class Boss(arcade.TextureAnimationSprite):
         self.center_y += self.y_direction*delta_time*30
 
 
-class StartCutSceneView(arcade.View):
+class StartDialogueView(arcade.View):
     def __init__(self):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
         self.sprite_list = arcade.SpriteList()
-        self.sprite_list.append(Boss("hovering"))
+        self.sprite_list.append(Boss("angry"))
+        self.sprite_list.append(Player())
+        self.sprite_list[1].center_x = 200
+        self.sprite_list[1].center_y = 300
+        self.sprite_list[1].scale = 10
 
         self.display_size = arcade.get_display_size()
 
-        self.dialogue = ["Hello, adventurer! I'm glad you stopped by.",
-            "This village is in peril. A fearsome dragon has been spotted in the mountains.",
-            "Will you be the hero we need?",
+        self.dialogue = ["Uhh, uhh... No one should bother me when I am sleeping!!",
+            "Or you will face my full power!!!",
+            "I can create a time loop and you will stay here forever",
             "Please, find the dragon and save us all!"]
         self.current_line_index = 0
         
@@ -246,7 +256,10 @@ class StartCutSceneView(arcade.View):
         if key == arcade.key.ESCAPE:
             self.window.show_view(PauseGUIView(self))
         if key == arcade.key.ENTER:
-            self.current_line_index += 1
+            if self.current_line_index < len(self.dialogue) - 1:
+                self.current_line_index += 1
+            else:
+                self.window.show_view(PlatformerView())
 
 class PlatformerView(arcade.View):
     def __init__(self):
@@ -255,7 +268,7 @@ class PlatformerView(arcade.View):
         self.player = Player()
         self.sprite_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(self.player)
-        self.sprite_list.append(Boss("show-right"))
+        self.sprite_list.append(Boss("hovering"))
 
     def on_draw(self):
         self.clear()
