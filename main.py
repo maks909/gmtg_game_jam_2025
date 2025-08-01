@@ -53,7 +53,7 @@ class StartGUIView(arcade.View):
         # add a button to start th game
         @play_button.event("on_click")
         def on_click(event):
-            self.window.show_view(PlatformerView())
+            self.window.show_view(StartCutSceneView())
 
         # add a button to switch to exit the game
         @exit_button.event("on_click")
@@ -170,21 +170,83 @@ class Player(arcade.TextureAnimationSprite):
 
 class Boss(arcade.TextureAnimationSprite):
     def __init__(self, behavior_type: str):
-        super().__init__(center_x=arcade.get_display_size()[0]/2, center_y=300)
-        
+        super().__init__()
+
         self.injured_animation = create_animation("images/boss/", "injured", 2, 500)
         self.sleeping_animation = create_animation("images/boss/", "sleeping", 7, 500)
         self.angry_animation = create_animation("images/boss/", "angry", 2, 500)
         self.normal_animation = create_animation("images/boss/", "normal", 1, 500, False)
         self.dead_animation = create_animation("images/boss/", "dead", 1, 500, False)
-        self.animation=self.angry_animation
-        self.scale = 20
+        self.behavior_type = behavior_type
+        if self.behavior_type == "hovering":
+            self.center_x=arcade.get_display_size()[0]/2
+            self.y_direction = 1
+            self.center_y = 800
+            self.animation=self.sleeping_animation
+            self.scale = 20
+
+    def update(self, delta_time: float):
+        super().update() # The base Sprite.update doesn't need delta_time
+
+        if self.behavior_type == "hovering":
+            self.hover(delta_time)
+    
+    def hover(self, delta_time: float):
+        if self.center_y <= 680:
+            self.y_direction = 1
+        elif self.center_y >=730:
+            self.y_direction = -1
+        self.center_y += self.y_direction*delta_time*30
+
 
 class StartCutSceneView(arcade.View):
     def __init__(self):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
         self.sprite_list = arcade.SpriteList()
-        self.sprite_list.append(Boss("howering"))
+        self.sprite_list.append(Boss("hovering"))
+
+        self.display_size = arcade.get_display_size()
+
+        self.dialogue = ["Hello, adventurer! I'm glad you stopped by.",
+            "This village is in peril. A fearsome dragon has been spotted in the mountains.",
+            "Will you be the hero we need?",
+            "Please, find the dragon and save us all!"]
+        self.current_line_index = 0
+        
+        self.dialogue_box = arcade.shape_list.create_rectangle_filled(
+            center_x=self.display_size[0] / 2,
+            center_y=100,
+            width=self.display_size[0] - 40,
+            height=150,
+            color=(0, 0, 0, 180) # Black with transparency
+        )
+    def on_draw(self):
+        """Draw the dialogue box and the current line of text."""
+        self.clear()
+        self.sprite_list.draw(pixelated=True)
+        # Now, draw the dialogue box on top
+        self.dialogue_box.draw()
+
+        current_line = self.dialogue[self.current_line_index]
+        arcade.draw_text(
+            current_line,
+            x=40,
+            y=150,
+            color=arcade.color.WHITE,
+            font_size=18,
+            width=self.display_size[0] - 80,
+            multiline=True, 
+        )
+
+    def on_update(self, delta_time):
+        self.sprite_list.update(delta_time)
+        self.sprite_list.update_animation(delta_time)
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.ESCAPE:
+            self.window.show_view(PauseGUIView(self))
+        if key == arcade.key.ENTER:
+            self.current_line_index += 1
 
 class PlatformerView(arcade.View):
     def __init__(self):
@@ -193,19 +255,18 @@ class PlatformerView(arcade.View):
         self.player = Player()
         self.sprite_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(self.player)
-        self.sprite_list.append(Boss("showing-right"))
+        self.sprite_list.append(Boss("show-right"))
 
     def on_draw(self):
         self.clear()
         self.sprite_list.draw(pixelated=True)
     
     def on_update(self, delta_time):
-        # Update sprite positions
-        self.sprite_list.update()
+        # Pass delta_time to the sprite list's update method
+        self.sprite_list.update(delta_time)
         
-        self.sprite_list.update_animation()
-        
-        # Update physics engine if needed
+        # The update_animation method also benefits from delta_time
+        self.sprite_list.update_animation(delta_time)
         self.physics_engine.update()
     
     def on_key_press(self, key, modifiers):
