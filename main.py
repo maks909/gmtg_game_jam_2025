@@ -221,6 +221,13 @@ class Boss(arcade.TextureAnimationSprite):
             self.y_direction = -1
         self.center_y += self.y_direction*delta_time*30
 
+class Figure(arcade.Sprite):
+    def __init__(self, image_name, center_x, center_y, velocity):
+        super().__init__()
+        self.center_x = center_x
+        self.center_y = center_y
+        self.velocity = velocity
+        self.texture = arcade.load_texture(f"images/figures/{image_name}.png")
 
 class StartCutSceneView(arcade.View):
     def __init__(self):
