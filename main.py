@@ -174,6 +174,8 @@ class Player(arcade.TextureAnimationSprite):
         self.stand_right_animation = create_animation("images/player/", "run_right", 1, 80)
 
         self.animation = self.stand_left_animation
+        
+        self.jump_sound = arcade.load_sound("sounds/jump.mp3")
 
 class Boss(arcade.TextureAnimationSprite):
     def __init__(self, behavior_type: str):
@@ -244,10 +246,11 @@ class StartCutSceneView(arcade.View):
         self.physics_engine.update() 
         if self.player.center_x <=500:
             self.player.center_x += 3
-        elif self.player.center_x >= 500 and self.player.center_x <= 520 and self.jump_count<=5:
+        elif self.player.center_x >= 500 and self.player.center_x <= 520 and self.jump_count<4:
             if self.physics_engine.can_jump():
                 self.player.change_y = 10
                 self.jump_count += 1
+                self.player.jump_sound.play()
         else:
             self.window.show_view(StartDialogueView())
 
