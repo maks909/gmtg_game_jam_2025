@@ -359,6 +359,9 @@ class PlatformerView(arcade.View):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, self.wall_list)
         self.sprite_list.append(Boss("hovering"))
 
+        self.music = arcade.load_sound("sounds/platformer_music.mp3")
+        self.music.play(loop=True)
+
     def on_draw(self):
         self.clear()
         self.sprite_list.draw(pixelated=True)
