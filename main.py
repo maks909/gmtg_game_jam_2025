@@ -345,6 +345,17 @@ class PlatformerView(arcade.View):
         self.display_size = arcade.get_display_size()
         self.wall_list = arcade.SpriteList(use_spatial_hash=True)
         self.wall_list.append(arcade.Sprite("images/platform/platform.png", 7.5, self.display_size[0]/2, 120))
+        
+        # Create invisible side walls
+        left_wall = arcade.SpriteSolidColor(50, self.display_size[1], (0, 0, 0, 0))
+        left_wall.center_x = -25
+        left_wall.center_y = self.display_size[1] // 2
+        self.wall_list.append(left_wall)
+        
+        right_wall = arcade.SpriteSolidColor(50, self.display_size[1], (0, 0, 0, 0))
+        right_wall.center_x = self.display_size[0] + 25
+        right_wall.center_y = self.display_size[1] // 2
+        self.wall_list.append(right_wall)
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, self.wall_list)
         self.sprite_list.append(Boss("hovering"))
 
