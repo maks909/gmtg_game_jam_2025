@@ -57,7 +57,7 @@ class GameView(arcade.View):
 
         # Our physics engine
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite, gravity_constant=GRAVITY, walls=self.scene["Platforms"]
+            self.player_sprite, gravity_constant=GRAVITY, platforms=self.scene["Platforms"]
         )
 
         # Keep track of the score

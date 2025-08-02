@@ -161,10 +161,10 @@ def create_animation(path, image_name, frame_count, frame_duration, number = Tru
         return arcade.TextureAnimation(frames)
 class Player(arcade.TextureAnimationSprite):
     def __init__(self):
-        super().__init__(center_x=300, center_y=300)
+        super().__init__()
 
         self.center_x=300
-        self.center_y=300
+        self.center_y=330
         self.scale=5
         
         self.run_left_animation = create_animation("images/player/", "run_left", 4, 80)
@@ -192,7 +192,7 @@ class Boss(arcade.TextureAnimationSprite):
             self.animation=self.sleeping_animation
             self.scale = 20
         elif self.behavior_type == "angry":
-            self.center_x=arcade.get_display_size()[0]*0.75
+            self.center_x=arcade.get_display_size()[0]/2
             self.y_direction = 1
             self.center_y = 800
             self.animation=self.angry_animation
@@ -216,6 +216,7 @@ class StartCutSceneView(arcade.View):
     def __init__(self):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
+        self.display_size = arcade.get_display_size()
         self.sprite_list = arcade.SpriteList()
         self.player = Player()
         self.player.center_x = 20
@@ -223,20 +224,32 @@ class StartCutSceneView(arcade.View):
         self.sprite_list.append(self.player)
         self.sprite_list.append(Boss("hovering"))
 
+        self.wall = arcade.Sprite("images/platform/platform.png", 7.5, self.display_size[0]/2, 120)
+        self.wall_list = arcade.SpriteList(use_spatial_hash=True)
+        self.wall_list.append(self.wall)
+
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, walls=self.wall_list)
+
+        self.jump_count = 0
+
     def on_draw(self):
-        """Draw the dialogue box and the current line of text."""
         self.clear()
         self.sprite_list.draw(pixelated=True)
+        self.wall_list.draw(pixelated=True)
     
     def on_update(self, delta_time):
         self.sprite_list.update(delta_time)
         self.sprite_list.update_animation(delta_time)
-        self.player.center_x += 3
         self.player.scale = 6
-        if self.player.center_x >= 600: 
+        self.physics_engine.update() 
+        if self.player.center_x <=500:
+            self.player.center_x += 3
+        elif self.player.center_x >= 500 and self.player.center_x <= 520 and self.jump_count<=5:
+            if self.physics_engine.can_jump():
+                self.player.change_y = 10
+                self.jump_count += 1
+        else:
             self.window.show_view(StartDialogueView())
-        elif self.player.center_x >= 400 and self.player.center_x <= 420:
-            self.sprite_list[1].animation = self.sprite_list[1].angry_animation
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ESCAPE:
@@ -246,13 +259,13 @@ class StartDialogueView(arcade.View):
     def __init__(self):
         super().__init__(background_color=arcade.color.GRAY_ASPARAGUS)
         self.sprite_list = arcade.SpriteList()
+        self.display_size = arcade.get_display_size()
         self.sprite_list.append(Boss("angry"))
         self.sprite_list.append(Player())
-        self.sprite_list[1].center_x = 200
-        self.sprite_list[1].center_y = 300
-        self.sprite_list[1].scale = 10
-
-        self.display_size = arcade.get_display_size()
+        self.sprite_list.append(arcade.Sprite("images/platform/platform.png", 7.5, self.display_size[0]/2, 120))
+        self.sprite_list[1].center_x = 520
+        self.sprite_list[1].scale = 6
+        self.sprite_list[1].animation = self.sprite_list[1].stand_right_animation
 
         self.dialogue = ["Uhh, uhh... No one should bother me when I am sleeping!!",
             "Or you will face my full power!!!",
