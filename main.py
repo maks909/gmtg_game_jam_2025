@@ -253,7 +253,7 @@ class StartCutSceneView(arcade.View):
         self.player.scale = 6
         self.physics_engine.update() 
         if self.player.center_x <=500:
-            self.player.play_jump_sound()
+            self.player.play_run_sound()
             self.player.center_x += 3
         elif self.player.center_x >= 500 and self.player.center_x <= 520 and self.jump_count<4:
             if self.physics_engine.can_jump():
