@@ -223,14 +223,13 @@ class Boss(arcade.TextureAnimationSprite):
         self.center_y += self.y_direction*delta_time*30
 
 class Figure(arcade.Sprite):
-    def __init__(self, image_name, center_x, center_y, direction, speed, walls, player):
+    def __init__(self, image_name, center_x, center_y, direction, speed, player):
         super().__init__()
         self.center_x = center_x
         self.center_y = center_y
         self.texture = arcade.load_texture(f"images/figures/{image_name}.png")
 
         self.player = player
-        self.walls = walls
         self.speed = speed
         self.direction = direction
         self.scale = 4
@@ -239,14 +238,20 @@ class Figure(arcade.Sprite):
         super().update()
         self.center_x += self.direction*self.speed
         self.angle += 2
-        if arcade.check_for_collision_with_list(self, self.walls):
-            pass
-            # del self
-        elif arcade.check_for_collision(self, self.player):
-            del self
+        if arcade.check_for_collision(self, self.player):
+            self.player.animation = self.player.run_left_animation
     
     def update_animation(delta_time, *args, **kwargs):
         pass
+
+class BossArm(arcade.TextureAnimationSprite):
+    def __init__(self, center_x, center_y, direction,):
+        super().__init__()
+        self.center_x = center_x
+        self.center_y = center_y
+        self.scale = 4
+        self.angle = 90*direction
+        self.animation = create_animation("images/arm/", "arm", 6, 500)
 
 class StartCutSceneView(arcade.View):
     def __init__(self):
@@ -377,6 +382,8 @@ class PlatformerView(arcade.View):
         left_wall.center_x = -25
         left_wall.center_y = self.display_size[1] // 2
         self.wall_list.append(left_wall)
+        self.boss_arm = BossArm(100, 320, -1)
+        self.sprite_list.append(self.boss_arm)
         
         right_wall = arcade.SpriteSolidColor(50, self.display_size[1], (0, 0, 0, 0))
         right_wall.center_x = self.display_size[0] + 25
@@ -388,7 +395,7 @@ class PlatformerView(arcade.View):
         self.music = arcade.load_sound("sounds/platformer_music.mp3")
         self.music.play(loop=True)
 
-        self.sprite_list.append(Figure("circle", 100, 320, 1, 2, self.wall_list, self.player))
+        self.sprite_list.append(Figure("circle", 100, 320, 1, 2, self.player))
 
         self.old_time = time.time()
         self.figure_amount = 0
