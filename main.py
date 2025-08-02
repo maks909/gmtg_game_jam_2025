@@ -181,6 +181,10 @@ class Player(arcade.TextureAnimationSprite):
         self.run_sound = arcade.load_sound("sounds/running.mp3")
         self.run_sound_player = None
 
+    def play_run_sound(self):
+        if not self.run_sound_player or not self.run_sound_player.playing:
+            self.run_sound_player = self.run_sound.play(volume=0.5, pan=random.randint(-10, 10)/10)
+
 class Boss(arcade.TextureAnimationSprite):
     def __init__(self, behavior_type: str):
         super().__init__()
@@ -249,8 +253,7 @@ class StartCutSceneView(arcade.View):
         self.player.scale = 6
         self.physics_engine.update() 
         if self.player.center_x <=500:
-            if not self.player.run_sound_player or not self.player.run_sound_player.playing:
-                self.player.run_sound_player = self.player.run_sound.play(volume=0.5, pan=random.randint(-10, 10)/10)
+            self.player.play_jump_sound()
             self.player.center_x += 3
         elif self.player.center_x >= 500 and self.player.center_x <= 520 and self.jump_count<4:
             if self.physics_engine.can_jump():
@@ -339,12 +342,16 @@ class PlatformerView(arcade.View):
         self.sprite_list = arcade.SpriteList()
         self.player = Player()
         self.sprite_list.append(self.player)
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player)
+        self.display_size = arcade.get_display_size()
+        self.wall_list = arcade.SpriteList(use_spatial_hash=True)
+        self.wall_list.append(arcade.Sprite("images/platform/platform.png", 7.5, self.display_size[0]/2, 120))
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, self.wall_list)
         self.sprite_list.append(Boss("hovering"))
 
     def on_draw(self):
         self.clear()
         self.sprite_list.draw(pixelated=True)
+        self.wall_list.draw(pixelated=True)
     
     def on_update(self, delta_time):
         # Pass delta_time to the sprite list's update method
@@ -363,6 +370,10 @@ class PlatformerView(arcade.View):
             self.player.change_x = 10
         elif key == arcade.key.ESCAPE:
             self.window.show_view(PauseGUIView(PlatformerView()))
+        if key == arcade.key.UP:
+            if self.physics_engine.can_jump():
+                self.player.change_y = 10
+                self.player.jump_sound.play()
     
     def on_key_release(self, key, modifiers):
         if key == arcade.key.LEFT:
