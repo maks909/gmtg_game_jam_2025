@@ -234,7 +234,7 @@ class StartCutSceneView(arcade.View):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, walls=self.wall_list)
 
         self.jump_count = 0
-        self.player.run_sound.play()
+        self.player.run_sound.play(volume=0.5)
 
     def on_draw(self):
         self.clear()
