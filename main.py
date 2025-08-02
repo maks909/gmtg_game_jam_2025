@@ -176,6 +176,7 @@ class Player(arcade.TextureAnimationSprite):
         self.animation = self.stand_left_animation
         
         self.jump_sound = arcade.load_sound("sounds/jump.mp3")
+        self.run_sound = arcade.load_sound("sounds/running.mp3")
 
 class Boss(arcade.TextureAnimationSprite):
     def __init__(self, behavior_type: str):
@@ -233,6 +234,7 @@ class StartCutSceneView(arcade.View):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, walls=self.wall_list)
 
         self.jump_count = 0
+        self.player.run_sound.play()
 
     def on_draw(self):
         self.clear()
