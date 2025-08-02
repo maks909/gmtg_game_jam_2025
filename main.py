@@ -10,6 +10,7 @@ import sys
 import os
 
 import random
+import time
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
@@ -222,12 +223,30 @@ class Boss(arcade.TextureAnimationSprite):
         self.center_y += self.y_direction*delta_time*30
 
 class Figure(arcade.Sprite):
-    def __init__(self, image_name, center_x, center_y, velocity):
+    def __init__(self, image_name, center_x, center_y, direction, speed, walls, player):
         super().__init__()
         self.center_x = center_x
         self.center_y = center_y
-        self.velocity = velocity
         self.texture = arcade.load_texture(f"images/figures/{image_name}.png")
+
+        self.player = player
+        self.walls = walls
+        self.speed = speed
+        self.direction = direction
+        self.scale = 4
+
+    def update(self, delta_time):
+        super().update()
+        self.center_x += self.direction*self.speed
+        self.angle += 2
+        if arcade.check_for_collision_with_list(self, self.walls):
+            pass
+            # del self
+        elif arcade.check_for_collision(self, self.player):
+            del self
+    
+    def update_animation(delta_time, *args, **kwargs):
+        pass
 
 class StartCutSceneView(arcade.View):
     def __init__(self):
@@ -369,6 +388,12 @@ class PlatformerView(arcade.View):
         self.music = arcade.load_sound("sounds/platformer_music.mp3")
         self.music.play(loop=True)
 
+        self.sprite_list.append(Figure("circle", 100, 320, 1, 2, self.wall_list, self.player))
+
+        self.old_time = time.time()
+        self.figure_amount = 0
+        self.figure_amount = random.randint(2, 10)
+
     def on_draw(self):
         self.clear()
         self.sprite_list.draw(pixelated=True)
@@ -381,6 +406,7 @@ class PlatformerView(arcade.View):
         # The update_animation method also benefits from delta_time
         self.sprite_list.update_animation(delta_time)
         self.physics_engine.update()
+
     
     def on_key_press(self, key, modifiers):
         if key == arcade.key.LEFT:
@@ -390,7 +416,7 @@ class PlatformerView(arcade.View):
             self.player.animation = self.player.run_right_animation
             self.player.change_x = 10
         elif key == arcade.key.ESCAPE:
-            self.window.show_view(PauseGUIView(PlatformerView()))
+            self.window.show_view(PauseGUIView(self))
         if key == arcade.key.UP:
             if self.physics_engine.can_jump():
                 self.player.change_y = 10
