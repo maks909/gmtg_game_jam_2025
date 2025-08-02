@@ -9,6 +9,8 @@ from arcade.gui import (
 import sys
 import os
 
+import random
+
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
@@ -177,6 +179,7 @@ class Player(arcade.TextureAnimationSprite):
         
         self.jump_sound = arcade.load_sound("sounds/jump.mp3")
         self.run_sound = arcade.load_sound("sounds/running.mp3")
+        self.run_sound_player = None
 
 class Boss(arcade.TextureAnimationSprite):
     def __init__(self, behavior_type: str):
@@ -234,7 +237,6 @@ class StartCutSceneView(arcade.View):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, walls=self.wall_list)
 
         self.jump_count = 0
-        self.player.run_sound.play(volume=0.5)
 
     def on_draw(self):
         self.clear()
@@ -247,6 +249,8 @@ class StartCutSceneView(arcade.View):
         self.player.scale = 6
         self.physics_engine.update() 
         if self.player.center_x <=500:
+            if not self.player.run_sound_player or not self.player.run_sound_player.playing:
+                self.player.run_sound_player = self.player.run_sound.play(volume=0.5, pan=random.randint(-10, 10)/10)
             self.player.center_x += 3
         elif self.player.center_x >= 500 and self.player.center_x <= 520 and self.jump_count<4:
             if self.physics_engine.can_jump():
