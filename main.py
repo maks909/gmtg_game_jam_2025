@@ -278,14 +278,25 @@ class StartDialogueView(arcade.View):
         current_line = self.dialogue[self.current_line_index]
         arcade.draw_text(
             current_line,
-            x=40,
-            y=150,
+            x=80,
+            y=120,
             color=arcade.color.WHITE,
             font_size=18,
             width=self.display_size[0] - 80,
             multiline=True, 
             font_name=PIXEL_FONT_NAME
         )
+        arcade.draw_text(
+            "Press Enter to continue",
+            x=80,
+            y=40,
+            color=arcade.color.WHITE,
+            font_size=18,
+            width=self.display_size[0] - 80,
+            multiline=True,
+            font_name=PIXEL_FONT_NAME
+        )
+
 
     def on_update(self, delta_time):
         self.sprite_list.update(delta_time)
