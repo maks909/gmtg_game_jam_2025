@@ -396,12 +396,6 @@ class PlatformerView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.player.change_x = 0
             self.player.animation = self.player.stand_right_animation
-    
-    def on_show_view(self) -> None:
-        pass
-
-    def on_hide_view(self) -> None:
-        pass
 
 def main():
     """ Main function """
